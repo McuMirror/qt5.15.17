@@ -13,21 +13,21 @@ jobs:
       run: |
           mkdir C:\workspaces
           cd /d C:\workspaces
-          git clone --recurse-submodules --depth 1 --shallow-submodules --branch main --single-branch --no-tags --progress --verbose https://github.com/cxxzhang/qt5.15.17
+          git clone --recurse-submodules --depth 1 --shallow-submodules --branch main --single-branch --no-tags --progress --verbose https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/cxxzhang/qt5.15.17
     - name: Set up VC-LTL
       shell: cmd
-      working-directory: C:\workspaces\qt5
-      run: call C:\workspaces\qt5\.github\workflows\setup-vc-ltl.bat
+      working-directory: C:\workspaces\qt5.15.17
+      run: call C:\workspaces\qt5.15.17\.github\workflows\setup-vc-ltl.bat
     - name: Build qt5
       shell: cmd
-      working-directory: C:\workspaces\qt5
+      working-directory: C:\workspaces\qt5.15.17
       run: |
           git config --global user.email "ci@github-actions.com"
           git config --global user.name "GitHub Actions"
-          call C:\workspaces\qt5\apply-patches.bat
-          call C:\workspaces\qt5\onekey-build-x86.bat
+          call C:\workspaces\qt5.15.17\apply-patches.bat
+          call C:\workspaces\qt5.15.17\onekey-build-x86.bat
     - uses: actions/upload-artifact@v4
       with:
         name: qt5.15.17_x86
-        path: C:\workspaces\qt5\Output\x86
+        path: C:\workspaces\qt5.15.17\Output\x86
 
