@@ -24,7 +24,7 @@ set PATH=%~dp0qtbase\bin;%PATH%
 
 cd /d "%~dp0"
 
-configure -prefix %InstallDir% -confirm-license -opensource -release -force-debug-info -opengl dynamic -no-directwrite -mp -nomake examples -nomake tests -recheck-all
+call configure -prefix %InstallDir% -confirm-license -opensource -release -force-debug-info -opengl dynamic -no-directwrite -mp -nomake examples -nomake tests -recheck-all
 nmake
 
 if %ERRORLEVEL% NEQ 0 exit /B %ERRORLEVEL%
