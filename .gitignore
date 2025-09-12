@@ -2,3 +2,12 @@ Makefile
 .qmake.cache
 .qmake.super
 *.pro.user*
+.vs
+Output
+config.cache
+config.log
+config.opt
+config.status.bat
+config.summary
+config.tests
+.qmake.stash

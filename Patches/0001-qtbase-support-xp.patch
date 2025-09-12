@@ -1,0 +1,139 @@
+From ba7b6b2c6ffabef26ae8778c65bc4fff363b0e64 Mon Sep 17 00:00:00 2001
+From: zhangshuangjun <zhangshuangjun@leagsoft.com>
+Date: Fri, 12 Sep 2025 14:37:39 +0800
+Subject: [PATCH] build: fix build error.
+
+fix: support windows xp.
+---
+ mkspecs/common/msvc-desktop.conf              | 31 ++++++++++++++-----
+ qmake/Makefile.win32                          | 18 ++++++++++-
+ .../windows/qwindowsfontdatabase.cpp          |  9 +++++-
+ .../windowsvista/qwindowsvistastyle.cpp       |  4 ++-
+ 4 files changed, 52 insertions(+), 10 deletions(-)
+
+diff --git a/mkspecs/common/msvc-desktop.conf b/mkspecs/common/msvc-desktop.conf
+index f5d12f445b4..bfb0047306e 100644
+--- a/mkspecs/common/msvc-desktop.conf
++++ b/mkspecs/common/msvc-desktop.conf
+@@ -38,9 +38,9 @@ QMAKE_YACCFLAGS         = -d
+ QMAKE_CFLAGS            = -nologo -Zc:wchar_t
+ QMAKE_CFLAGS_WARN_ON    = -W3
+ QMAKE_CFLAGS_WARN_OFF   = -W0
+-QMAKE_CFLAGS_RELEASE    = $$QMAKE_CFLAGS_OPTIMIZE -MD
+-QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO += $$QMAKE_CFLAGS_OPTIMIZE -Zi -MD
+-QMAKE_CFLAGS_DEBUG      = -Zi -MDd
++QMAKE_CFLAGS_RELEASE    = $$QMAKE_CFLAGS_OPTIMIZE -MT
++QMAKE_CFLAGS_RELEASE_WITH_DEBUGINFO += $$QMAKE_CFLAGS_OPTIMIZE -Zi -MT
++QMAKE_CFLAGS_DEBUG      = -Zi -MTd
+ QMAKE_CFLAGS_YACC       =
+ QMAKE_CFLAGS_LTCG       = -GL
+ 
+@@ -84,14 +84,31 @@ QMAKE_RUN_CXX_IMP       = $(CXX) -c $(CXXFLAGS) $(INCPATH) -Fo$@ $<
+ QMAKE_RUN_CXX_IMP_BATCH = $(CXX) -c $(CXXFLAGS) $(INCPATH) -Fo$@ @<<
+ 
+ QMAKE_LINK              = link
+-QMAKE_LFLAGS            = /NOLOGO /DYNAMICBASE /NXCOMPAT
++QMAKE_LFLAGS            = /NOLOGO /DYNAMICBASE /NXCOMPAT  /LIBPATH:../ /LIBPATH:../../ /LIBPATH:../../../ /LIBPATH:../../../../ /LIBPATH:../../../../../  /LIBPATH:../../../../../../  /LIBPATH:../../../../../../../
+ QMAKE_LFLAGS_RELEASE    = /OPT:REF /INCREMENTAL:NO
+ QMAKE_LFLAGS_RELEASE_WITH_DEBUGINFO = /DEBUG /OPT:REF /INCREMENTAL:NO
+ QMAKE_LFLAGS_DEBUG      = /DEBUG
+-QMAKE_LFLAGS_CONSOLE    = /SUBSYSTEM:CONSOLE
+-QMAKE_LFLAGS_WINDOWS    = /SUBSYSTEM:WINDOWS
++
++contains(QMAKE_TARGET.arch, x86_64) {
++    QMAKE_LFLAGS_CONSOLE    = /SUBSYSTEM:CONSOLE,5.02
++    QMAKE_LFLAGS_WINDOWS    = /SUBSYSTEM:WINDOWS,5.02
++    # YY-Thunks support for x64
++    LIBS                   += YY-Thunks/objs/x64/YY_Thunks_for_WinXP.obj
++    QMAKE_LFLAGS_DLL        = /DLL /ENTRY:DllMainCRTStartupForYY_Thunks
++} else:contains(QMAKE_TARGET.arch, x86) {
++    QMAKE_LFLAGS_CONSOLE    = /SUBSYSTEM:CONSOLE,5.01
++    QMAKE_LFLAGS_WINDOWS    = /SUBSYSTEM:WINDOWS,5.01
++      # YY-Thunks support for x86
++    LIBS                   += YY-Thunks/objs/x86/YY_Thunks_for_WinXP.obj
++    QMAKE_LFLAGS_DLL        = /DLL /ENTRY:DllMainCRTStartupForYY_Thunks
++} else {
++    QMAKE_LFLAGS_CONSOLE    = /SUBSYSTEM:CONSOLE
++    QMAKE_LFLAGS_WINDOWS    = /SUBSYSTEM:WINDOWS
++    QMAKE_LFLAGS_DLL        = /DLL
++}
++
+ QMAKE_LFLAGS_EXE        = \"/MANIFESTDEPENDENCY:type=\'win32\' name=\'Microsoft.Windows.Common-Controls\' version=\'6.0.0.0\' publicKeyToken=\'6595b64144ccf1df\' language=\'*\' processorArchitecture=\'*\'\"
+-QMAKE_LFLAGS_DLL        = /DLL
++
+ QMAKE_LFLAGS_LTCG       = /LTCG
+ QMAKE_PREFIX_SHLIB      =
+ QMAKE_EXTENSION_SHLIB   = dll
+diff --git a/qmake/Makefile.win32 b/qmake/Makefile.win32
+index 6c8d5ec9227..b0a61258928 100644
+--- a/qmake/Makefile.win32
++++ b/qmake/Makefile.win32
+@@ -44,10 +44,26 @@ CFLAGS   = $(CFLAGS_PCH) $(CFLAGS_BARE) $(CFLAGS)
+ CXXFLAGS_BARE = $(CFLAGS_BARE)
+ CXXFLAGS = $(CFLAGS)
+ 
++
++
++
++
++
++!if defined(_ARM64_) || defined(_M_ARM64)
++LIBS = ole32.lib advapi32.lib shell32.lib netapi32.lib
+ LFLAGS	    =
+-LIBS        = ole32.lib advapi32.lib shell32.lib netapi32.lib
++!elseif defined(_WIN64)
++LFLAGS	    = /SUBSYSTEM:CONSOLE,5.02
++LIBS = ../../YY-Thunks/objs/x64/YY_Thunks_for_WinXP.obj ole32.lib advapi32.lib shell32.lib netapi32.lib
++!else
++LFLAGS	    = /SUBSYSTEM:CONSOLE,5.01
++LIBS = ../../YY-Thunks/objs/x86/YY_Thunks_for_WinXP.obj ole32.lib advapi32.lib shell32.lib netapi32.lib
++!endif
++
++
+ ADDCLEAN    = qmake.pdb qmake.ilk
+ 
++
+ #qmake code
+ OBJS        = project.obj main.obj ioutils.obj proitems.obj qmakevfs.obj \
+               qmakeglobals.obj qmakeparser.obj qmakeevaluator.obj qmakebuiltins.obj \
+diff --git a/src/platformsupport/fontdatabases/windows/qwindowsfontdatabase.cpp b/src/platformsupport/fontdatabases/windows/qwindowsfontdatabase.cpp
+index 9883a72a1e1..701dc8afd6b 100644
+--- a/src/platformsupport/fontdatabases/windows/qwindowsfontdatabase.cpp
++++ b/src/platformsupport/fontdatabases/windows/qwindowsfontdatabase.cpp
+@@ -2102,10 +2102,17 @@ QFont QWindowsFontDatabase::systemDefaultFont()
+     return systemFont;
+ }
+ 
+-QFont QWindowsFontDatabase::LOGFONT_to_QFont(const LOGFONT& logFont, int verticalDPI_In)
++QFont QWindowsFontDatabase::LOGFONT_to_QFont(const LOGFONT& _logFont, int verticalDPI_In)
+ {
+     if (verticalDPI_In <= 0)
+         verticalDPI_In = defaultVerticalDPI();
++
++    LOGFONT logFont;
++    memcpy(&logFont, &_logFont, sizeof(LOGFONT));
++    if (logFont.lfWeight == 0) {
++        GetObject(QWindowsFontDatabase::systemFont(), sizeof(logFont), &logFont);
++    }   
++
+     QFont qFont(QString::fromWCharArray(logFont.lfFaceName));
+     qFont.setItalic(logFont.lfItalic);
+     if (logFont.lfWeight != FW_DONTCARE)
+diff --git a/src/plugins/styles/windowsvista/qwindowsvistastyle.cpp b/src/plugins/styles/windowsvista/qwindowsvistastyle.cpp
+index 140daeaf6da..212d0448f1e 100644
+--- a/src/plugins/styles/windowsvista/qwindowsvistastyle.cpp
++++ b/src/plugins/styles/windowsvista/qwindowsvistastyle.cpp
+@@ -83,7 +83,9 @@ static const int windowsRightBorder      = 15; // right border on windows
+ */
+ bool QWindowsVistaStylePrivate::useVista()
+ {
+-    return QWindowsVistaStylePrivate::useXP();
++   return (QWindowsVistaStylePrivate::useXP() &&
++        (QSysInfo::WindowsVersion >= QSysInfo::WV_VISTA &&
++            QSysInfo::WindowsVersion < QSysInfo::WV_NT_based));
+ }
+ 
+ /* \internal
+-- 
+2.39.2.windows.1
+
