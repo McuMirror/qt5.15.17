@@ -13,6 +13,9 @@ popd
 
 call "%VisualStudioInstallDir%\VC\Auxiliary\Build\vcvarsall.bat" amd64_x86
 
+set WindowsTargetPlatformMinVersion=5.1.2600.0
+call "%~dp0.github\workflows\VC-LTL helper for nmake.cmd"
+
 set InstallDir="%~dp0Output\x86"
 
 mkdir %InstallDir%
