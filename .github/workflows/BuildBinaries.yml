@@ -26,7 +26,7 @@ jobs:
           git config --global user.name "GitHub Actions"
           call C:\workspaces\qt5\apply-patches.bat
           call C:\workspaces\qt5\onekey-build-x86.bat
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v4
       with:
         name: qt5.15.17_x86
         path: C:\workspaces\qt5\Output\x86
