@@ -31,3 +31,82 @@ jobs:
         name: qt5.15.17_x86
         path: C:\workspaces\qt5.15.17\Output\x86
 
+  windows-x64:
+    runs-on: windows-latest
+    env:
+      POWERSHELL_TELEMETRY_OPTOUT: 1
+    steps:
+    - name: Clone repository
+      shell: cmd
+      run: |
+          mkdir C:\workspaces
+          cd /d C:\workspaces
+          git clone --recurse-submodules --depth 1 --shallow-submodules --branch main --single-branch --no-tags --progress --verbose https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/cxxzhang/qt5.15.17
+    - name: Set up VC-LTL
+      shell: cmd
+      working-directory: C:\workspaces\qt5.15.17
+      run: call C:\workspaces\qt5.15.17\.github\workflows\setup-vc-ltl.bat
+    - name: Build qt5
+      shell: cmd
+      working-directory: C:\workspaces\qt5.15.17
+      run: |
+          git config --global user.email "ci@github-actions.com"
+          git config --global user.name "GitHub Actions"
+          call C:\workspaces\qt5.15.17\apply-patches.bat
+          call C:\workspaces\qt5.15.17\onekey-build-x64.bat
+    - uses: actions/upload-artifact@v4
+      with:
+        name: qt5.15.17_x64
+        path: C:\workspaces\qt5.15.17\Output\x64
+
+  release:
+    needs: [windows-x86, windows-x64]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download x86 artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: qt5.15.17_x86
+        path: ./release_assets/x86
+    - name: Download x64 artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: qt5.15.17_x64
+        path: ./release_assets/x64
+    - name: Compress x86 to zip
+      run: |
+        cd release_assets/x86
+        zip -r ../qt5.15.17_x86.zip .
+    - name: Compress x64 to zip
+      run: |
+        cd release_assets/x64
+        zip -r ../qt5.15.17_x64.zip .
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      with:
+        tag_name: qt5.15.17-${{ github.run_id }}
+        release_name: qt5.15.17 Build ${{ github.run_id }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload x86 zip asset
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./release_assets/qt5.15.17_x86.zip
+        asset_name: qt5.15.17_x86.zip
+        asset_content_type: application/zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload x64 zip asset
+      uses: actions/upload-release-asset@v1
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./release_assets/qt5.15.17_x64.zip
+        asset_name: qt5.15.17_x64.zip
+        asset_content_type: application/zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
