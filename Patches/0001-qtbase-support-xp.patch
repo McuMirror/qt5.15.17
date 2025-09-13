@@ -1,15 +1,15 @@
-From 3feefdaa8c1724bac6f573e5f8104b3407fbd3f0 Mon Sep 17 00:00:00 2001
+From ed9a5a5aad93d9c25faa77dd4d7e10a7131445ff Mon Sep 17 00:00:00 2001
 From: zhangshuangjun <zhangshuangjun@leagsoft.com>
 Date: Fri, 12 Sep 2025 14:37:39 +0800
 Subject: [PATCH] fix:xp support
 
 ---
  mkspecs/common/msvc-desktop.conf              | 31 ++++++++++++++-----
- qmake/Makefile.win32                          | 18 ++++++++++-
+ qmake/Makefile.win32                          | 17 ++++++++--
  src/corelib/text/qregularexpression.cpp       | 10 ++++++
  .../windows/qwindowsfontdatabase.cpp          |  9 +++++-
  .../windowsvista/qwindowsvistastyle.cpp       |  4 ++-
- 5 files changed, 62 insertions(+), 10 deletions(-)
+ 5 files changed, 60 insertions(+), 11 deletions(-)
 
 diff --git a/mkspecs/common/msvc-desktop.conf b/mkspecs/common/msvc-desktop.conf
 index f5d12f445b4..bfb0047306e 100644
@@ -65,27 +65,25 @@ index f5d12f445b4..bfb0047306e 100644
  QMAKE_PREFIX_SHLIB      =
  QMAKE_EXTENSION_SHLIB   = dll
 diff --git a/qmake/Makefile.win32 b/qmake/Makefile.win32
-index 6c8d5ec9227..b0a61258928 100644
+index 6c8d5ec9227..0ca122e5322 100644
 --- a/qmake/Makefile.win32
 +++ b/qmake/Makefile.win32
-@@ -44,10 +44,26 @@ CFLAGS   = $(CFLAGS_PCH) $(CFLAGS_BARE) $(CFLAGS)
+@@ -44,10 +44,23 @@ CFLAGS   = $(CFLAGS_PCH) $(CFLAGS_BARE) $(CFLAGS)
  CXXFLAGS_BARE = $(CFLAGS_BARE)
  CXXFLAGS = $(CFLAGS)
  
-+
-+
-+
-+
-+
-+!if defined(_ARM64_) || defined(_M_ARM64)
-+LIBS = ole32.lib advapi32.lib shell32.lib netapi32.lib
- LFLAGS	    =
+-LFLAGS	    =
 -LIBS        = ole32.lib advapi32.lib shell32.lib netapi32.lib
-+!elseif defined(_WIN64)
-+LFLAGS	    = /SUBSYSTEM:CONSOLE,5.02
++!if "$(VSCMD_ARG_TGT_ARCH)" == "ARM64" ||  "$(VSCMD_ARG_TGT_ARCH)" == "arm64"
++LIBS = ole32.lib advapi32.lib shell32.lib netapi32.lib
++LFLAGS =
++
++!elseif "$(VSCMD_ARG_TGT_ARCH)" == "X64" ||  "$(VSCMD_ARG_TGT_ARCH)" == "x64"
++LFLAGS = /SUBSYSTEM:CONSOLE,5.02
 +LIBS = ../../YY-Thunks/objs/x64/YY_Thunks_for_WinXP.obj ole32.lib advapi32.lib shell32.lib netapi32.lib
++
 +!else
-+LFLAGS	    = /SUBSYSTEM:CONSOLE,5.01
++LFLAGS = /SUBSYSTEM:CONSOLE,5.01
 +LIBS = ../../YY-Thunks/objs/x86/YY_Thunks_for_WinXP.obj ole32.lib advapi32.lib shell32.lib netapi32.lib
 +!endif
 +
