@@ -1,15 +1,15 @@
-From ba7b6b2c6ffabef26ae8778c65bc4fff363b0e64 Mon Sep 17 00:00:00 2001
+From 3feefdaa8c1724bac6f573e5f8104b3407fbd3f0 Mon Sep 17 00:00:00 2001
 From: zhangshuangjun <zhangshuangjun@leagsoft.com>
 Date: Fri, 12 Sep 2025 14:37:39 +0800
-Subject: [PATCH] build: fix build error.
+Subject: [PATCH] fix:xp support
 
-fix: support windows xp.
 ---
  mkspecs/common/msvc-desktop.conf              | 31 ++++++++++++++-----
  qmake/Makefile.win32                          | 18 ++++++++++-
+ src/corelib/text/qregularexpression.cpp       | 10 ++++++
  .../windows/qwindowsfontdatabase.cpp          |  9 +++++-
  .../windowsvista/qwindowsvistastyle.cpp       |  4 ++-
- 4 files changed, 52 insertions(+), 10 deletions(-)
+ 5 files changed, 62 insertions(+), 10 deletions(-)
 
 diff --git a/mkspecs/common/msvc-desktop.conf b/mkspecs/common/msvc-desktop.conf
 index f5d12f445b4..bfb0047306e 100644
@@ -96,6 +96,27 @@ index 6c8d5ec9227..b0a61258928 100644
  #qmake code
  OBJS        = project.obj main.obj ioutils.obj proitems.obj qmakevfs.obj \
                qmakeglobals.obj qmakeparser.obj qmakeevaluator.obj qmakebuiltins.obj \
+diff --git a/src/corelib/text/qregularexpression.cpp b/src/corelib/text/qregularexpression.cpp
+index 0c5e2a6ffed..5401082498f 100644
+--- a/src/corelib/text/qregularexpression.cpp
++++ b/src/corelib/text/qregularexpression.cpp
+@@ -1124,6 +1124,16 @@ static bool isJitEnabled()
+         return ok ? (enableJit != 0) : true;
+     }
+ 
++    if (QSysInfo::WindowsVersion >= QSysInfo::WV_VISTA
++        && QSysInfo::WindowsVersion < QSysInfo::WV_NT_based) 
++    { 
++    }
++    else
++    {
++        return false;
++    }
++ 
++
+ #ifdef QT_DEBUG
+     return false;
+ #elif defined(Q_OS_MACOS)
 diff --git a/src/platformsupport/fontdatabases/windows/qwindowsfontdatabase.cpp b/src/platformsupport/fontdatabases/windows/qwindowsfontdatabase.cpp
 index 9883a72a1e1..701dc8afd6b 100644
 --- a/src/platformsupport/fontdatabases/windows/qwindowsfontdatabase.cpp
