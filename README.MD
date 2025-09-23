@@ -11,7 +11,7 @@ Customized version of Qt qt5.15.17.
 ## System Requirements
 
 - Supported OS: Windows XP or later
-- Supported Platforms: x86, x86-64.
+- Supported Platforms: x86, x86-64,arm64.
 
 ## Documents
 I just built some LGPLv3 modules. 
