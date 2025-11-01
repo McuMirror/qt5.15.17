@@ -44,7 +44,7 @@ set PATH=%~dp0qtbase\bin;%PATH%
 
 cd /d "%~dp0"
 
-call configure -prefix %InstallDir% -confirm-license -opensource -debug-and-release -force-debug-info -opengl dynamic -no-directwrite -no-feature-sql -mp -nomake examples -nomake tests -recheck-all -openssl-linked -I "%OpenSSLInclude%" -L "%OpenSSLLibRelease%"
+call configure -prefix %InstallDir% -confirm-license -opensource -debug-and-release -force-debug-info -opengl dynamic -no-directwrite -mp -nomake examples -nomake tests -recheck-all -openssl-linked -I "%OpenSSLInclude%" -L "%OpenSSLLibRelease%"
 nmake -A
 
 if %ERRORLEVEL% NEQ 0 exit /B %ERRORLEVEL%
