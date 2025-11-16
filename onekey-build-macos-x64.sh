@@ -9,15 +9,14 @@ TARGET_TAG="macos-x64"
 INSTALL_DIR="$SCRIPT_DIR/Output/macos-x64"
 OPENSSL_ROOT="$QT_BUILD_TEMP/openssl/$TARGET_TAG"
 OPENSSL_WORK="$OPENSSL_ROOT/work"
-OPENSSL_INSTALL_PREFIX="$OPENSSL_ROOT/install"
+OPENSSL_INSTALL_ROOT="$SCRIPT_DIR/install"
+OPENSSL_INSTALL_PREFIX="$OPENSSL_INSTALL_ROOT/macos-x64"
 OPENSSL_INCLUDE="$OPENSSL_INSTALL_PREFIX/include"
 OPENSSL_LIB_RELEASE="$OPENSSL_INSTALL_PREFIX/lib"
 OPENSSL_SYMBOL_HIDE_FLAGS="-Wl,-dead_strip"
 COMMON_CFLAGS="-fPIC"
 export CFLAGS="$COMMON_CFLAGS"
 export CXXFLAGS="$COMMON_CFLAGS"
-
-mkdir -p "$QT_BUILD_TEMP" "$INSTALL_DIR"
 
 if [[ ! -f "$OPENSSL_ARCHIVE" ]]; then
   echo "Missing OpenSSL archive at $OPENSSL_ARCHIVE" >&2
@@ -32,45 +31,31 @@ cpu_count() {
   fi
 }
 
-stage_headers() {
-  :
-}
-
-build_variant() {
-  local variant="$1"
-  local output="$2"
-  local target="$3"
-  local mode="${4:-release}"
-  local variant_root="$OPENSSL_WORK/$variant"
+build_openssl() {
+  local variant_root="$OPENSSL_WORK/$1"
+  local config_target="$2"
   rm -rf "$variant_root"
   mkdir -p "$variant_root"
   tar -xf "$OPENSSL_ARCHIVE" -C "$variant_root"
   local src="$variant_root/$OPENSSL_VERSION"
-  stage_headers "$src"
-  pushd "$src" >/dev/null
-  local configure_args=()
-  if [[ "$mode" == "debug" ]]; then
-    configure_args+=("-d")
-  fi
-  configure_args+=("$target")
-  perl ./Configure "${configure_args[@]}" no-shared
-  make -j"$(cpu_count)" build_libs
-  mkdir -p "$output"
-  cp libssl.a libcrypto.a "$output/"
-  popd >/dev/null
+  (
+    set -e
+    cd "$src"
+    perl ./Configure "$config_target" no-shared
+    make -j"$(cpu_count)" build_libs
+    make install_sw INSTALLTOP="$OPENSSL_INSTALL_PREFIX"
+  )
 }
 
-rm -rf "$OPENSSL_ROOT"
-INSTALL_PREFIX="$OPENSSL_ROOT/install"
-mkdir -p "$OPENSSL_INSTALL_PREFIX"
-build_variant release "$OPENSSL_INSTALL_PREFIX/lib" darwin64-x86_64-cc release
-pushd "$OPENSSL_WORK/release/$OPENSSL_VERSION" >/dev/null
-make install_sw INSTALLTOP="$OPENSSL_INSTALL_PREFIX"
-popd >/dev/null
+rm -rf "$OPENSSL_WORK" "$OPENSSL_INSTALL_PREFIX"
+mkdir -p "$QT_BUILD_TEMP" "$OPENSSL_INSTALL_ROOT" "$INSTALL_DIR"
+build_openssl release darwin64-x86_64-cc
+echo "OpenSSL installed to $OPENSSL_INSTALL_PREFIX"
+ls "$OPENSSL_LIB_RELEASE" >/dev/null
 
 export OPENSSL_INCDIR="$OPENSSL_INCLUDE"
 export OPENSSL_LIBDIR="$OPENSSL_LIB_RELEASE"
-export OPENSSL_LIBS="${OPENSSL_SYMBOL_HIDE_FLAGS} -L\"$OPENSSL_LIB_RELEASE\" -lssl -lcrypto"
+export OPENSSL_LIBS="${OPENSSL_SYMBOL_HIDE_FLAGS} -L${OPENSSL_LIB_RELEASE} -lssl -lcrypto"
 export OPENSSL_LIBS_RELEASE="$OPENSSL_LIBS"
 export PATH="$SCRIPT_DIR/qtbase/bin:$PATH"
 

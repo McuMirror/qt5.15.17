@@ -9,15 +9,14 @@ TARGET_TAG="linux-x64-debug"
 INSTALL_DIR="$SCRIPT_DIR/Output/linux-x64-debug"
 OPENSSL_ROOT="$QT_BUILD_TEMP/openssl/$TARGET_TAG"
 OPENSSL_WORK="$OPENSSL_ROOT/work"
-OPENSSL_INSTALL_PREFIX="$OPENSSL_ROOT/install"
+OPENSSL_INSTALL_ROOT="$SCRIPT_DIR/install"
+OPENSSL_INSTALL_PREFIX="$OPENSSL_INSTALL_ROOT/linux-x64d"
 OPENSSL_INCLUDE="$OPENSSL_INSTALL_PREFIX/include"
 OPENSSL_LIB_DEBUG="$OPENSSL_INSTALL_PREFIX/lib"
 OPENSSL_SYMBOL_HIDE_FLAGS="-Wl,--exclude-libs,libssl.a:libcrypto.a"
 COMMON_CFLAGS="-fPIC"
 export CFLAGS="$COMMON_CFLAGS"
 export CXXFLAGS="$COMMON_CFLAGS"
-
-mkdir -p "$QT_BUILD_TEMP" "$INSTALL_DIR"
 
 if [[ ! -f "$OPENSSL_ARCHIVE" ]]; then
   echo "Missing OpenSSL archive at $OPENSSL_ARCHIVE" >&2
@@ -32,37 +31,30 @@ cpu_count() {
   fi
 }
 
-stage_headers() {
-  :
-}
-
-build_variant() {
-  local output="$1"
-  local target="$2"
+build_openssl() {
   local variant_root="$OPENSSL_WORK/debug"
   rm -rf "$variant_root"
   mkdir -p "$variant_root"
   tar -xf "$OPENSSL_ARCHIVE" -C "$variant_root"
   local src="$variant_root/$OPENSSL_VERSION"
-  stage_headers "$src"
-  pushd "$src" >/dev/null
-  perl ./Configure "$target" no-shared
-  make -j"$(cpu_count)" build_libs
-  mkdir -p "$output"
-  cp libssl.a libcrypto.a "$output/"
-  popd >/dev/null
+  (
+    set -e
+    cd "$src"
+    perl ./Configure debug-linux-x86_64 no-shared
+    make -j"$(cpu_count)" build_libs
+    make install_sw INSTALLTOP="$OPENSSL_INSTALL_PREFIX"
+  )
 }
 
-rm -rf "$OPENSSL_ROOT"
-mkdir -p "$OPENSSL_INSTALL_PREFIX"
-build_variant "$OPENSSL_INSTALL_PREFIX/lib" debug-linux-x86_64
-pushd "$OPENSSL_WORK/debug/$OPENSSL_VERSION" >/dev/null
-make install_sw INSTALLTOP="$OPENSSL_INSTALL_PREFIX"
-popd >/dev/null
+rm -rf "$OPENSSL_WORK" "$OPENSSL_INSTALL_PREFIX"
+mkdir -p "$QT_BUILD_TEMP" "$OPENSSL_INSTALL_ROOT" "$INSTALL_DIR"
+build_openssl
+echo "OpenSSL debug installed to $OPENSSL_INSTALL_PREFIX"
+ls "$OPENSSL_LIB_DEBUG" >/dev/null
 
 export OPENSSL_INCDIR="$OPENSSL_INCLUDE"
 export OPENSSL_LIBDIR="$OPENSSL_LIB_DEBUG"
-export OPENSSL_LIBS="${OPENSSL_SYMBOL_HIDE_FLAGS} -L\"$OPENSSL_LIB_DEBUG\" -lssl -lcrypto -ldl -lpthread"
+export OPENSSL_LIBS="${OPENSSL_SYMBOL_HIDE_FLAGS} -L${OPENSSL_LIB_DEBUG} -lssl -lcrypto -ldl -lpthread"
 export OPENSSL_LIBS_RELEASE="$OPENSSL_LIBS"
 export OPENSSL_LIBS_DEBUG="$OPENSSL_LIBS"
 export PATH="$SCRIPT_DIR/qtbase/bin:$PATH"
@@ -70,4 +62,3 @@ export PATH="$SCRIPT_DIR/qtbase/bin:$PATH"
 bash ./configure -prefix "$INSTALL_DIR" -confirm-license -opensource -debug -force-debug-info -nomake examples -nomake tests -openssl-linked -platform linux-g++ -I "$OPENSSL_INCDIR" -L "$OPENSSL_LIBDIR"
 make -j"$(cpu_count)"
 make install
-popd >/dev/null

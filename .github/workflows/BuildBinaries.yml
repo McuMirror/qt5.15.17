@@ -301,8 +301,21 @@ jobs:
         name: qt5.15.17_macos_arm64
         path: ${{ github.workspace }}/Output/macos-arm64
 
+
   release:
-    needs: [windows-x86, windows-x64, windows-arm64, windows-x86-debug, windows-x64-debug, windows-arm64-debug, linux-x64, linux-x64-debug, linux-arm64, linux-arm64-debug, macos-x64, macos-arm64]
+    needs:
+    - windows-x86
+    - windows-x64
+    - windows-arm64
+    - windows-x86-debug
+    - windows-x64-debug
+    - windows-arm64-debug
+    - linux-x64
+    - linux-x64-debug
+    - linux-arm64
+    - linux-arm64-debug
+    - macos-x64
+    - macos-arm64
     runs-on: ubuntu-latest
     steps:
     - name: Download x86 artifact
