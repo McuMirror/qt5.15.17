@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-QT_BUILD_TEMP="${QT_BUILD_TEMP:-"$SCRIPT_DIR/build-temp"}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}"  )" && pwd)"
+QT_BUILD_TEMP="${QT_BUILD_TEMP:-"$SCRIPT_DIR/build-temp" }"
 OPENSSL_ARCHIVE="$SCRIPT_DIR/openssl/openssl-1.1.1w.tar.gz"
 OPENSSL_VERSION="openssl-1.1.1w"
 TARGET_TAG="macos-x64-debug"
@@ -52,7 +52,7 @@ build_variant() {
   local src="$variant_root/$OPENSSL_VERSION"
   stage_headers "$src"
   pushd "$src" >/dev/null
-  perl ./Configure -d "$target" no-shared
+  perl ./Configure "$target" no-shared
   make -j"$(cpu_count)" build_libs
   mkdir -p "$output"
   cp libssl.a libcrypto.a "$output/"
@@ -61,16 +61,16 @@ build_variant() {
 
 rm -rf "$OPENSSL_ROOT"
 mkdir -p "$OPENSSL_LIB_DEBUG"
-build_variant "$OPENSSL_LIB_DEBUG" darwin64-x86_64-cc
+build_variant "$OPENSSL_LIB_DEBUG" debug-darwin64-x86_64-cc
 
 export OPENSSL_INCDIR="$OPENSSL_INCLUDE"
 export OPENSSL_LIBDIR="$OPENSSL_LIB_DEBUG"
-export OPENSSL_LIBS="${OPENSSL_SYMBOL_HIDE_FLAGS} -L\"$OPENSSL_LIB_DEBUG\" -lssl -lcrypto"
+export OPENSSL_LIBS="${OPENSSL_SYMBOL_HIDE_FLAGS} -L"$OPENSSL_LIB_DEBUG" -lssl -lcrypto"
 export OPENSSL_LIBS_RELEASE="$OPENSSL_LIBS"
 export OPENSSL_LIBS_DEBUG="$OPENSSL_LIBS"
 export PATH="$SCRIPT_DIR/qtbase/bin:$PATH"
 
-bash ./configure -prefix "$INSTALL_DIR" -confirm-license -opensource -debug -force-debug-info -nomake examples -nomake tests -openssl-linked -platform macx-clang -I "$OPENSSL_INCLUDE" -L "$OPENSSL_LIB_DEBUG"
+bash ./configure -prefix "$INSTALL_DIR" -confirm-license -opensource -debug -force-debug-info -no-framework -nomake examples -nomake tests -openssl-linked -platform macx-clang -I "$OPENSSL_INCLUDE" -L "$OPENSSL_LIB_DEBUG"
 make -j"$(cpu_count)"
 make install
-popd >/dev/null
+

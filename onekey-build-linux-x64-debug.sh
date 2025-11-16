@@ -52,7 +52,7 @@ build_variant() {
   local src="$variant_root/$OPENSSL_VERSION"
   stage_headers "$src"
   pushd "$src" >/dev/null
-  perl ./Configure -d "$target" no-shared
+  perl ./Configure "$target" no-shared
   make -j"$(cpu_count)" build_libs
   mkdir -p "$output"
   cp libssl.a libcrypto.a "$output/"
@@ -61,7 +61,7 @@ build_variant() {
 
 rm -rf "$OPENSSL_ROOT"
 mkdir -p "$OPENSSL_LIB_DEBUG"
-build_variant "$OPENSSL_LIB_DEBUG" linux-x86_64
+build_variant "$OPENSSL_LIB_DEBUG" debug-linux-x86_64
 
 export OPENSSL_INCDIR="$OPENSSL_INCLUDE"
 export OPENSSL_LIBDIR="$OPENSSL_LIB_DEBUG"

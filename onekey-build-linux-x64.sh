@@ -67,15 +67,17 @@ build_variant() {
 }
 
 rm -rf "$OPENSSL_ROOT"
-mkdir -p "$OPENSSL_LIB_RELEASE"
-build_variant release "$OPENSSL_LIB_RELEASE" linux-x86_64 release
+INSTALL_PREFIX="$OPENSSL_ROOT/install"
+mkdir -p "$INSTALL_PREFIX"
+build_variant release "$INSTALL_PREFIX/lib" linux-x86_64 release
 
-export OPENSSL_INCDIR="$OPENSSL_INCLUDE"
-export OPENSSL_LIBDIR="$OPENSSL_LIB_RELEASE"
-export OPENSSL_LIBS="${OPENSSL_SYMBOL_HIDE_FLAGS} -L\"$OPENSSL_LIB_RELEASE\" -lssl -lcrypto -ldl -lpthread"
+export OPENSSL_INCDIR="$INSTALL_PREFIX/include"
+export OPENSSL_LIBDIR="$INSTALL_PREFIX/lib"
+export OPENSSL_LIBS="${OPENSSL_SYMBOL_HIDE_FLAGS} -L\"$INSTALL_PREFIX/lib\" -lssl -lcrypto -ldl -lpthread"
 export OPENSSL_LIBS_RELEASE="$OPENSSL_LIBS"
 export PATH="$SCRIPT_DIR/qtbase/bin:$PATH"
 
-bash ./configure -prefix "$INSTALL_DIR" -confirm-license -opensource -release -force-debug-info -nomake examples -nomake tests -openssl-linked -platform linux-g++ -I "$OPENSSL_INCLUDE" -L "$OPENSSL_LIB_RELEASE"
+bash ./configure -prefix "$INSTALL_DIR" -confirm-license -opensource -release -force-debug-info -nomake examples -nomake tests -openssl-linked -platform linux-g++ -I "$OPENSSL_INCDIR" -L "$OPENSSL_LIBDIR"
 make -j"$(cpu_count)"
 make install
+
