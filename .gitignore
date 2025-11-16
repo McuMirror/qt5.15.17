@@ -4,6 +4,8 @@ Makefile
 *.pro.user*
 .vs
 Output
+build-temp
+install
 config.cache
 config.log
 config.opt
