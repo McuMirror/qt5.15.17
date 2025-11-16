@@ -9,8 +9,9 @@ TARGET_TAG="linux-x64-debug"
 INSTALL_DIR="$SCRIPT_DIR/Output/linux-x64-debug"
 OPENSSL_ROOT="$QT_BUILD_TEMP/openssl/$TARGET_TAG"
 OPENSSL_WORK="$OPENSSL_ROOT/work"
-OPENSSL_INCLUDE="$OPENSSL_ROOT/include"
-OPENSSL_LIB_DEBUG="$OPENSSL_ROOT/lib/debug"
+OPENSSL_INSTALL_PREFIX="$OPENSSL_ROOT/install"
+OPENSSL_INCLUDE="$OPENSSL_INSTALL_PREFIX/include"
+OPENSSL_LIB_DEBUG="$OPENSSL_INSTALL_PREFIX/lib"
 OPENSSL_SYMBOL_HIDE_FLAGS="-Wl,--exclude-libs,libssl.a:libcrypto.a"
 COMMON_CFLAGS="-fPIC"
 export CFLAGS="$COMMON_CFLAGS"
@@ -32,14 +33,7 @@ cpu_count() {
 }
 
 stage_headers() {
-  local src="$1"
-  rm -rf "$OPENSSL_INCLUDE"
-  mkdir -p "$OPENSSL_INCLUDE"
-  if command -v rsync >/dev/null 2>&1; then
-    rsync -a "$src/include/" "$OPENSSL_INCLUDE/"
-  else
-    cp -R "$src/include/." "$OPENSSL_INCLUDE/"
-  fi
+  :
 }
 
 build_variant() {
@@ -60,8 +54,11 @@ build_variant() {
 }
 
 rm -rf "$OPENSSL_ROOT"
-mkdir -p "$OPENSSL_LIB_DEBUG"
-build_variant "$OPENSSL_LIB_DEBUG" debug-linux-x86_64
+mkdir -p "$OPENSSL_INSTALL_PREFIX"
+build_variant "$OPENSSL_INSTALL_PREFIX/lib" debug-linux-x86_64
+pushd "$OPENSSL_WORK/debug/$OPENSSL_VERSION" >/dev/null
+make install_sw INSTALLTOP="$OPENSSL_INSTALL_PREFIX"
+popd >/dev/null
 
 export OPENSSL_INCDIR="$OPENSSL_INCLUDE"
 export OPENSSL_LIBDIR="$OPENSSL_LIB_DEBUG"
@@ -70,7 +67,7 @@ export OPENSSL_LIBS_RELEASE="$OPENSSL_LIBS"
 export OPENSSL_LIBS_DEBUG="$OPENSSL_LIBS"
 export PATH="$SCRIPT_DIR/qtbase/bin:$PATH"
 
-bash ./configure -prefix "$INSTALL_DIR" -confirm-license -opensource -debug -force-debug-info -nomake examples -nomake tests -openssl-linked -platform linux-g++ -I "$OPENSSL_INCLUDE" -L "$OPENSSL_LIB_DEBUG"
+bash ./configure -prefix "$INSTALL_DIR" -confirm-license -opensource -debug -force-debug-info -nomake examples -nomake tests -openssl-linked -platform linux-g++ -I "$OPENSSL_INCDIR" -L "$OPENSSL_LIBDIR"
 make -j"$(cpu_count)"
 make install
 popd >/dev/null

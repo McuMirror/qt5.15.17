@@ -9,8 +9,9 @@ TARGET_TAG="linux-x64"
 INSTALL_DIR="$SCRIPT_DIR/Output/linux-x64"
 OPENSSL_ROOT="$QT_BUILD_TEMP/openssl/$TARGET_TAG"
 OPENSSL_WORK="$OPENSSL_ROOT/work"
-OPENSSL_INCLUDE="$OPENSSL_ROOT/include"
-OPENSSL_LIB_RELEASE="$OPENSSL_ROOT/lib/release"
+OPENSSL_INSTALL_PREFIX="$OPENSSL_ROOT/install"
+OPENSSL_INCLUDE="$OPENSSL_INSTALL_PREFIX/include"
+OPENSSL_LIB_RELEASE="$OPENSSL_INSTALL_PREFIX/lib"
 OPENSSL_SYMBOL_HIDE_FLAGS="-Wl,--exclude-libs,libssl.a:libcrypto.a"
 COMMON_CFLAGS="-fPIC"
 export CFLAGS="$COMMON_CFLAGS"
@@ -32,14 +33,7 @@ cpu_count() {
 }
 
 stage_headers() {
-  local src="$1"
-  rm -rf "$OPENSSL_INCLUDE"
-  mkdir -p "$OPENSSL_INCLUDE"
-  if command -v rsync >/dev/null 2>&1; then
-    rsync -a "$src/include/" "$OPENSSL_INCLUDE/"
-  else
-    cp -R "$src/include/." "$OPENSSL_INCLUDE/"
-  fi
+  :
 }
 
 build_variant() {
@@ -67,13 +61,15 @@ build_variant() {
 }
 
 rm -rf "$OPENSSL_ROOT"
-INSTALL_PREFIX="$OPENSSL_ROOT/install"
-mkdir -p "$INSTALL_PREFIX"
-build_variant release "$INSTALL_PREFIX/lib" linux-x86_64 release
+mkdir -p "$OPENSSL_INSTALL_PREFIX"
+build_variant release "$OPENSSL_INSTALL_PREFIX/lib" linux-x86_64 release
+pushd "$OPENSSL_WORK/release/$OPENSSL_VERSION" >/dev/null
+make install_sw INSTALLTOP="$OPENSSL_INSTALL_PREFIX"
+popd >/dev/null
 
-export OPENSSL_INCDIR="$INSTALL_PREFIX/include"
-export OPENSSL_LIBDIR="$INSTALL_PREFIX/lib"
-export OPENSSL_LIBS="${OPENSSL_SYMBOL_HIDE_FLAGS} -L\"$INSTALL_PREFIX/lib\" -lssl -lcrypto -ldl -lpthread"
+export OPENSSL_INCDIR="$OPENSSL_INCLUDE"
+export OPENSSL_LIBDIR="$OPENSSL_LIB_RELEASE"
+export OPENSSL_LIBS="${OPENSSL_SYMBOL_HIDE_FLAGS} -L\"$OPENSSL_LIB_RELEASE\" -lssl -lcrypto -ldl -lpthread"
 export OPENSSL_LIBS_RELEASE="$OPENSSL_LIBS"
 export PATH="$SCRIPT_DIR/qtbase/bin:$PATH"
 

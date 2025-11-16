@@ -9,8 +9,9 @@ TARGET_TAG="macos-x64"
 INSTALL_DIR="$SCRIPT_DIR/Output/macos-x64"
 OPENSSL_ROOT="$QT_BUILD_TEMP/openssl/$TARGET_TAG"
 OPENSSL_WORK="$OPENSSL_ROOT/work"
-OPENSSL_INCLUDE="$OPENSSL_ROOT/include"
-OPENSSL_LIB_RELEASE="$OPENSSL_ROOT/lib/release"
+OPENSSL_INSTALL_PREFIX="$OPENSSL_ROOT/install"
+OPENSSL_INCLUDE="$OPENSSL_INSTALL_PREFIX/include"
+OPENSSL_LIB_RELEASE="$OPENSSL_INSTALL_PREFIX/lib"
 OPENSSL_SYMBOL_HIDE_FLAGS="-Wl,-dead_strip"
 COMMON_CFLAGS="-fPIC"
 export CFLAGS="$COMMON_CFLAGS"
@@ -32,14 +33,7 @@ cpu_count() {
 }
 
 stage_headers() {
-  local src="$1"
-  rm -rf "$OPENSSL_INCLUDE"
-  mkdir -p "$OPENSSL_INCLUDE"
-  if command -v rsync >/dev/null 2>&1; then
-    rsync -a "$src/include/" "$OPENSSL_INCLUDE/"
-  else
-    cp -R "$src/include/." "$OPENSSL_INCLUDE/"
-  fi
+  :
 }
 
 build_variant() {
@@ -67,8 +61,12 @@ build_variant() {
 }
 
 rm -rf "$OPENSSL_ROOT"
-mkdir -p "$OPENSSL_LIB_RELEASE"
-build_variant release "$OPENSSL_LIB_RELEASE" darwin64-x86_64-cc release
+INSTALL_PREFIX="$OPENSSL_ROOT/install"
+mkdir -p "$OPENSSL_INSTALL_PREFIX"
+build_variant release "$OPENSSL_INSTALL_PREFIX/lib" darwin64-x86_64-cc release
+pushd "$OPENSSL_WORK/release/$OPENSSL_VERSION" >/dev/null
+make install_sw INSTALLTOP="$OPENSSL_INSTALL_PREFIX"
+popd >/dev/null
 
 export OPENSSL_INCDIR="$OPENSSL_INCLUDE"
 export OPENSSL_LIBDIR="$OPENSSL_LIB_RELEASE"
@@ -76,6 +74,6 @@ export OPENSSL_LIBS="${OPENSSL_SYMBOL_HIDE_FLAGS} -L\"$OPENSSL_LIB_RELEASE\" -ls
 export OPENSSL_LIBS_RELEASE="$OPENSSL_LIBS"
 export PATH="$SCRIPT_DIR/qtbase/bin:$PATH"
 
-bash ./configure -prefix "$INSTALL_DIR" -confirm-license -opensource -release -force-debug-info -nomake examples -nomake tests -openssl-linked -platform macx-clang -I "$OPENSSL_INCLUDE" -L "$OPENSSL_LIB_RELEASE"
+bash ./configure -prefix "$INSTALL_DIR" -confirm-license -opensource -release -force-debug-info -nomake examples -nomake tests -openssl-linked -platform macx-clang -I "$OPENSSL_INCDIR" -L "$OPENSSL_LIBDIR"
 make -j"$(cpu_count)"
 make install
