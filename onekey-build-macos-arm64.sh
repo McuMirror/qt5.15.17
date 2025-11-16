@@ -74,8 +74,7 @@ export OPENSSL_LIBS="${OPENSSL_SYMBOL_HIDE_FLAGS} -L\"$OPENSSL_LIB_RELEASE\" -ls
 export OPENSSL_LIBS_RELEASE="$OPENSSL_LIBS"
 export PATH="$SCRIPT_DIR/qtbase/bin:$PATH"
 
-pushd "$SCRIPT_DIR" >/dev/null
-./configure -prefix "$INSTALL_DIR" -confirm-license -opensource -release -force-debug-info -nomake examples -nomake tests -openssl-linked -platform macx-clang -I "$OPENSSL_INCLUDE" -L "$OPENSSL_LIB_RELEASE"
+bash ./configure -prefix "$INSTALL_DIR" -confirm-license -opensource -release -force-debug-info -nomake examples -nomake tests -openssl-linked -platform macx-clang -I "$OPENSSL_INCLUDE" -L "$OPENSSL_LIB_RELEASE"
 make -j"$(cpu_count)"
 make install
 popd >/dev/null

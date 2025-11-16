@@ -115,12 +115,14 @@ if %ERRORLEVEL% NEQ 0 (
   echo OpenSSL Configure failed for %VARIANT_NAME%.
   goto BuildVariantFail
 )
-call :ForceRuntimeFlag "%CURRENT_OPENSSL_SRC%\makefile" "%RUNTIME_FLAG%"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT_DIR%scripts\force-runtime.ps1" "%CURRENT_OPENSSL_SRC%\makefile" "%RUNTIME_FLAG%"
 if %ERRORLEVEL% NEQ 0 (
   popd
   echo Failed to enforce %RUNTIME_FLAG% for %VARIANT_NAME%.
+  echo Makefile path: %CURRENT_OPENSSL_SRC%\makefile
   goto BuildVariantFail
 )
+
 nmake /nologo build_libs
 if %ERRORLEVEL% NEQ 0 (
   popd
@@ -143,15 +145,6 @@ exit /b 0
 :BuildVariantFail
 exit /b 1
 
-:ForceRuntimeFlag
-set "RUNTIME_FILE=%~1"
-set "DESIRED_FLAG=%~2"
-powershell -NoProfile -Command "$file = '%RUNTIME_FILE%'; $text = Get-Content -Raw $file; $updated = $text -replace '/M[TD]d?', '%DESIRED_FLAG%'; [System.IO.File]::WriteAllText($file, $updated, [System.Text.Encoding]::ASCII)" >NUL
-if %ERRORLEVEL% NEQ 0 (
-  echo Failed to update runtime flag in %RUNTIME_FILE%.
-  exit /b 1
-)
-exit /b 0
 
 :CleanDir
 set "TARGET_PATH=%~1"
@@ -162,3 +155,10 @@ exit /b 0
 
 :script_end
 @endlocal
+
+
+
+
+
+
+
