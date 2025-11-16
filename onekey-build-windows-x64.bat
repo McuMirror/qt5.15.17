@@ -3,14 +3,17 @@
 @echo off
 set "SCRIPT_DIR=%~dp0"
 
-set VisualStudioInstallerFolder="%ProgramFiles(x86)%\Microsoft Visual Studio\Installer"
-if %PROCESSOR_ARCHITECTURE%==x86 set VisualStudioInstallerFolder="%ProgramFiles%\Microsoft Visual Studio\Installer"
+set "VisualStudioInstallerFolder=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer"
+if "%PROCESSOR_ARCHITECTURE%"=="x86" set "VisualStudioInstallerFolder=%ProgramFiles%\Microsoft Visual Studio\Installer"
 
-pushd %VisualStudioInstallerFolder%
-for /f "usebackq tokens=*" %%i in (vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath) do (
-  set VisualStudioInstallDir=%%i
+set "VSWHERE_EXE=%VisualStudioInstallerFolder%\vswhere.exe"
+if not exist "%VSWHERE_EXE%" (
+  echo vswhere not found at "%VSWHERE_EXE%"
+  exit /b 1
 )
-popd
+for /f "usebackq tokens=*" %%i in (`"%VSWHERE_EXE%" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (
+  set "VisualStudioInstallDir=%%i"
+)
 
 call "%VisualStudioInstallDir%\VC\Auxiliary\Build\vcvarsall.bat" amd64
 

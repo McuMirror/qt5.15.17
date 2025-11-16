@@ -11,7 +11,6 @@ OPENSSL_ROOT="$QT_BUILD_TEMP/openssl/$TARGET_TAG"
 OPENSSL_WORK="$OPENSSL_ROOT/work"
 OPENSSL_INCLUDE="$OPENSSL_ROOT/include"
 OPENSSL_LIB_RELEASE="$OPENSSL_ROOT/lib/release"
-OPENSSL_LIB_DEBUG="$OPENSSL_ROOT/lib/debug"
 OPENSSL_SYMBOL_HIDE_FLAGS="-Wl,-dead_strip"
 COMMON_CFLAGS="-fPIC -fvisibility=hidden"
 
@@ -44,17 +43,21 @@ stage_headers() {
 build_variant() {
   local variant="$1"
   local output="$2"
-  shift 2
+  local target="$3"
+  local mode="${4:-release}"
   local variant_root="$OPENSSL_WORK/$variant"
   rm -rf "$variant_root"
   mkdir -p "$variant_root"
   tar -xf "$OPENSSL_ARCHIVE" -C "$variant_root"
   local src="$variant_root/$OPENSSL_VERSION"
-  if [[ "$variant" == "release" ]]; then
-    stage_headers "$src"
-  fi
+  stage_headers "$src"
   pushd "$src" >/dev/null
-  perl ./Configure "$@" no-shared "CFLAGS=$COMMON_CFLAGS" "CXXFLAGS=$COMMON_CFLAGS"
+  local configure_args=()
+  if [[ "$mode" == "debug" ]]; then
+    configure_args+=("-d")
+  fi
+  configure_args+=("$target")
+  perl ./Configure "${configure_args[@]}" no-shared "CFLAGS=$COMMON_CFLAGS" "CXXFLAGS=$COMMON_CFLAGS"
   make -j"$(cpu_count)" build_libs
   mkdir -p "$output"
   cp libssl.a libcrypto.a "$output/"
@@ -62,19 +65,17 @@ build_variant() {
 }
 
 rm -rf "$OPENSSL_ROOT"
-mkdir -p "$OPENSSL_LIB_RELEASE" "$OPENSSL_LIB_DEBUG"
-build_variant release "$OPENSSL_LIB_RELEASE" darwin64-x86_64-cc
-build_variant debug "$OPENSSL_LIB_DEBUG" darwin64-x86_64-cc enable-debug
+mkdir -p "$OPENSSL_LIB_RELEASE"
+build_variant release "$OPENSSL_LIB_RELEASE" darwin64-x86_64-cc release
 
 export OPENSSL_INCDIR="$OPENSSL_INCLUDE"
 export OPENSSL_LIBDIR="$OPENSSL_LIB_RELEASE"
 export OPENSSL_LIBS="${OPENSSL_SYMBOL_HIDE_FLAGS} -L\"$OPENSSL_LIB_RELEASE\" -lssl -lcrypto"
 export OPENSSL_LIBS_RELEASE="$OPENSSL_LIBS"
-export OPENSSL_LIBS_DEBUG="${OPENSSL_SYMBOL_HIDE_FLAGS} -L\"$OPENSSL_LIB_DEBUG\" -lssl -lcrypto"
 export PATH="$SCRIPT_DIR/qtbase/bin:$PATH"
 
 pushd "$SCRIPT_DIR" >/dev/null
-./configure -prefix "$INSTALL_DIR" -confirm-license -opensource -debug-and-release -force-debug-info -nomake examples -nomake tests -openssl-linked -platform macx-clang -I "$OPENSSL_INCLUDE" -L "$OPENSSL_LIB_RELEASE"
+./configure -prefix "$INSTALL_DIR" -confirm-license -opensource -release -force-debug-info -nomake examples -nomake tests -openssl-linked -platform macx-clang -I "$OPENSSL_INCLUDE" -L "$OPENSSL_LIB_RELEASE"
 make -j"$(cpu_count)"
 make install
 popd >/dev/null

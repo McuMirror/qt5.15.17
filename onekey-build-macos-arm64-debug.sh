@@ -5,13 +5,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 QT_BUILD_TEMP="${QT_BUILD_TEMP:-"$SCRIPT_DIR/build-temp"}"
 OPENSSL_ARCHIVE="$SCRIPT_DIR/openssl/openssl-1.1.1w.tar.gz"
 OPENSSL_VERSION="openssl-1.1.1w"
-TARGET_TAG="linux-arm64"
-INSTALL_DIR="$SCRIPT_DIR/Output/linux-arm64"
+TARGET_TAG="macos-arm64-debug"
+INSTALL_DIR="$SCRIPT_DIR/Output/macos-arm64-debug"
 OPENSSL_ROOT="$QT_BUILD_TEMP/openssl/$TARGET_TAG"
 OPENSSL_WORK="$OPENSSL_ROOT/work"
 OPENSSL_INCLUDE="$OPENSSL_ROOT/include"
-OPENSSL_LIB_RELEASE="$OPENSSL_ROOT/lib/release"
-OPENSSL_SYMBOL_HIDE_FLAGS="-Wl,--exclude-libs,libssl.a:libcrypto.a"
+OPENSSL_LIB_DEBUG="$OPENSSL_ROOT/lib/debug"
+OPENSSL_SYMBOL_HIDE_FLAGS="-Wl,-dead_strip"
 COMMON_CFLAGS="-fPIC -fvisibility=hidden"
 
 mkdir -p "$QT_BUILD_TEMP" "$INSTALL_DIR"
@@ -22,10 +22,10 @@ if [[ ! -f "$OPENSSL_ARCHIVE" ]]; then
 fi
 
 cpu_count() {
-  if command -v nproc >/dev/null 2>&1; then
-    nproc
-  else
+  if command -v sysctl >/dev/null 2>&1; then
     sysctl -n hw.logicalcpu
+  else
+    nproc
   fi
 }
 
@@ -41,23 +41,16 @@ stage_headers() {
 }
 
 build_variant() {
-  local variant="$1"
-  local output="$2"
-  local target="$3"
-  local mode="${4:-release}"
-  local variant_root="$OPENSSL_WORK/$variant"
+  local output="$1"
+  local target="$2"
+  local variant_root="$OPENSSL_WORK/debug"
   rm -rf "$variant_root"
   mkdir -p "$variant_root"
   tar -xf "$OPENSSL_ARCHIVE" -C "$variant_root"
   local src="$variant_root/$OPENSSL_VERSION"
   stage_headers "$src"
   pushd "$src" >/dev/null
-  local configure_args=()
-  if [[ "$mode" == "debug" ]]; then
-    configure_args+=("-d")
-  fi
-  configure_args+=("$target")
-  perl ./Configure "${configure_args[@]}" no-shared "CFLAGS=$COMMON_CFLAGS" "CXXFLAGS=$COMMON_CFLAGS"
+  perl ./Configure -d "$target" no-shared "CFLAGS=$COMMON_CFLAGS" "CXXFLAGS=$COMMON_CFLAGS"
   make -j"$(cpu_count)" build_libs
   mkdir -p "$output"
   cp libssl.a libcrypto.a "$output/"
@@ -65,17 +58,17 @@ build_variant() {
 }
 
 rm -rf "$OPENSSL_ROOT"
-mkdir -p "$OPENSSL_LIB_RELEASE"
-build_variant release "$OPENSSL_LIB_RELEASE" linux-aarch64 release
+mkdir -p "$OPENSSL_LIB_DEBUG"
+build_variant "$OPENSSL_LIB_DEBUG" darwin64-arm64-cc
 
 export OPENSSL_INCDIR="$OPENSSL_INCLUDE"
-export OPENSSL_LIBDIR="$OPENSSL_LIB_RELEASE"
-export OPENSSL_LIBS="${OPENSSL_SYMBOL_HIDE_FLAGS} -L\"$OPENSSL_LIB_RELEASE\" -lssl -lcrypto -ldl -lpthread"
-export OPENSSL_LIBS_RELEASE="$OPENSSL_LIBS"
+export OPENSSL_LIBDIR="$OPENSSL_LIB_DEBUG"
+export OPENSSL_LIBS="${OPENSSL_SYMBOL_HIDE_FLAGS} -L\"$OPENSSL_LIB_DEBUG\" -lssl -lcrypto"
+export OPENSSL_LIBS_DEBUG="$OPENSSL_LIBS"
 export PATH="$SCRIPT_DIR/qtbase/bin:$PATH"
 
 pushd "$SCRIPT_DIR" >/dev/null
-./configure -prefix "$INSTALL_DIR" -confirm-license -opensource -release -force-debug-info -nomake examples -nomake tests -openssl-linked -platform linux-g++ -I "$OPENSSL_INCLUDE" -L "$OPENSSL_LIB_RELEASE"
+./configure -prefix "$INSTALL_DIR" -confirm-license -opensource -debug -force-debug-info -nomake examples -nomake tests -openssl-linked -platform macx-clang -I "$OPENSSL_INCLUDE" -L "$OPENSSL_LIB_DEBUG"
 make -j"$(cpu_count)"
 make install
 popd >/dev/null
