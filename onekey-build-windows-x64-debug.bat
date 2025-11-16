@@ -7,17 +7,17 @@ set VisualStudioInstallerFolder="%ProgramFiles(x86)%\Microsoft Visual Studio\Ins
 if %PROCESSOR_ARCHITECTURE%==x86 set VisualStudioInstallerFolder="%ProgramFiles%\Microsoft Visual Studio\Installer"
 
 pushd %VisualStudioInstallerFolder%
-for /f "usebackq tokens=*" %%i in (`vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath`) do (
+for /f "usebackq tokens=*" %%i in (vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath) do (
   set VisualStudioInstallDir=%%i
 )
 popd
 
-call "%VisualStudioInstallDir%\VC\Auxiliary\Build\vcvarsall.bat" amd64_x86
+call "%VisualStudioInstallDir%\VC\Auxiliary\Build\vcvarsall.bat" amd64
 
 set WindowsTargetPlatformMinVersion=5.1.2600.0
 call "%~dp0.github\workflows\VC-LTL helper for nmake.cmd"
 
-set InstallDir="%~dp0Output\x86"
+set InstallDir="%~dp0Output\x64d"
 
 mkdir %InstallDir%
 
@@ -30,30 +30,22 @@ if not exist "%QT_BUILD_TEMP%" (
 
 set "OPENSSL_ARCHIVE=%SCRIPT_DIR%openssl\openssl-1.1.1w.tar.gz"
 set "OPENSSL_VERSION=openssl-1.1.1w"
-set "OPENSSL_TARGET=win-x86"
+set "OPENSSL_TARGET=win-x64"
 set "OPENSSL_STAGE_ROOT=%QT_BUILD_TEMP%\openssl\%OPENSSL_TARGET%"
 set "OPENSSL_WORK_ROOT=%OPENSSL_STAGE_ROOT%\work"
 
 set "OPENSSL_INSTALL_ROOT=%SCRIPT_DIR%install"
-if /I "%OPENSSL_TARGET%"=="win-x86" (
-  set "OPENSSL_INSTALL_RELEASE=%OPENSSL_INSTALL_ROOT%\x86"
-  set "OPENSSL_INSTALL_DEBUG=%OPENSSL_INSTALL_ROOT%\x86d"
-) else (
-  set "OPENSSL_INSTALL_RELEASE=%OPENSSL_INSTALL_ROOT%\x86"
-  set "OPENSSL_INSTALL_DEBUG=%OPENSSL_INSTALL_ROOT%\x86d"
-)
-set "OpenSSLInclude=%OPENSSL_INSTALL_RELEASE%\include"
-set "OpenSSLLibRelease=%OPENSSL_INSTALL_RELEASE%\lib"
+set "OPENSSL_INSTALL_DEBUG=%OPENSSL_INSTALL_ROOT%\x64d"
+set "OpenSSLInclude=%OPENSSL_INSTALL_DEBUG%\include"
 set "OpenSSLLibDebug=%OPENSSL_INSTALL_DEBUG%\lib"
 
-call :SetupOpenSSL "VC-WIN32" "debug-VC-WIN32"
+call :BuildDebugOpenSSL "debug-VC-WIN64A" "%OPENSSL_INSTALL_DEBUG%"
 if %ERRORLEVEL% NEQ 0 exit /B %ERRORLEVEL%
 
 set "OPENSSL_INCDIR=%OpenSSLInclude%"
-set "OPENSSL_LIBDIR=%OpenSSLLibRelease%"
-set "OPENSSL_LIBS=/LIBPATH:""%OpenSSLLibRelease%"" libssl.lib libcrypto.lib Crypt32.lib User32.lib Ws2_32.lib Gdi32.lib Advapi32.lib"
-set "OPENSSL_LIBS_RELEASE=%OPENSSL_LIBS%"
-set "OPENSSL_LIBS_DEBUG=/LIBPATH:""%OpenSSLLibDebug%"" libssl.lib libcrypto.lib Crypt32.lib User32.lib Ws2_32.lib Gdi32.lib Advapi32.lib"
+set "OPENSSL_LIBDIR=%OpenSSLLibDebug%"
+set "OPENSSL_LIBS=/LIBPATH:""%OpenSSLLibDebug%"" libssl.lib libcrypto.lib Crypt32.lib User32.lib Ws2_32.lib Gdi32.lib Advapi32.lib"
+set "OPENSSL_LIBS_DEBUG=%OPENSSL_LIBS%"
 
 if defined INCLUDE (
   set "INCLUDE=%OpenSSLInclude%;%INCLUDE%"
@@ -61,21 +53,21 @@ if defined INCLUDE (
   set "INCLUDE=%OpenSSLInclude%"
 )
 if defined LIB (
-  set "LIB=%OpenSSLLibRelease%;%LIB%"
+  set "LIB=%OpenSSLLibDebug%;%LIB%"
 ) else (
-  set "LIB=%OpenSSLLibRelease%"
+  set "LIB=%OpenSSLLibDebug%"
 )
 if defined LIBPATH (
-  set "LIBPATH=%OpenSSLLibRelease%;%LIBPATH%"
+  set "LIBPATH=%OpenSSLLibDebug%;%LIBPATH%"
 ) else (
-  set "LIBPATH=%OpenSSLLibRelease%"
+  set "LIBPATH=%OpenSSLLibDebug%"
 )
 
 set PATH=%~dp0qtbase\bin;%PATH%
 
 cd /d "%~dp0"
 
-call configure -prefix %InstallDir% -confirm-license -opensource -debug-and-release -force-debug-info -opengl dynamic -no-directwrite -mp -nomake examples -nomake tests -recheck-all -openssl-linked
+call configure -prefix %InstallDir% -confirm-license -opensource -debug -force-debug-info -opengl dynamic -no-directwrite -mp -nomake examples -nomake tests -recheck-all -debug -openssl-linked
 nmake
 
 if %ERRORLEVEL% NEQ 0 exit /B %ERRORLEVEL%
@@ -83,9 +75,9 @@ nmake install
 
 goto :script_end
 
-:SetupOpenSSL
-set "OPENSSL_RELEASE_CONFIG=%~1"
-set "OPENSSL_DEBUG_CONFIG=%~2"
+:BuildDebugOpenSSL
+set "OPENSSL_DEBUG_CONFIG=%~1"
+set "INSTALL_TARGET=%~2"
 if not exist "%OPENSSL_ARCHIVE%" (
   echo OpenSSL archive not found: %OPENSSL_ARCHIVE%
   exit /b 1
@@ -94,20 +86,15 @@ call :CleanDir "%OPENSSL_STAGE_ROOT%"
 call :CleanDir "%OPENSSL_WORK_ROOT%"
 mkdir "%OPENSSL_STAGE_ROOT%"
 mkdir "%OPENSSL_WORK_ROOT%"
-call :BuildOpenSSLVariant "%OPENSSL_RELEASE_CONFIG%" "%OPENSSL_INSTALL_RELEASE%" "release"
-if %ERRORLEVEL% NEQ 0 exit /b %ERRORLEVEL%
-call :BuildOpenSSLVariant "%OPENSSL_DEBUG_CONFIG%" "%OPENSSL_INSTALL_DEBUG%" "debug"
-exit /b 0
+call :BuildOpenSSLVariant "%OPENSSL_DEBUG_CONFIG%" "%INSTALL_TARGET%" "debug"
+exit /b %ERRORLEVEL%
 
 :BuildOpenSSLVariant
 set "CONFIG_TARGET=%~1"
 set "INSTALL_DIR=%~2"
 set "VARIANT_NAME=%~3"
 set "VARIANT_ROOT=%OPENSSL_WORK_ROOT%\%VARIANT_NAME%"
-set "RUNTIME_FLAG=/MT"
-if /I "%VARIANT_NAME%"=="debug" (
-  set "RUNTIME_FLAG=/MTd"
-)
+set "RUNTIME_FLAG=/MTd"
 call :CleanDir "%VARIANT_ROOT%"
 call :CleanDir "%INSTALL_DIR%"
 mkdir "%VARIANT_ROOT%"
@@ -156,7 +143,7 @@ exit /b 1
 :ForceRuntimeFlag
 set "RUNTIME_FILE=%~1"
 set "DESIRED_FLAG=%~2"
-powershell -NoProfile -Command "$file = '%RUNTIME_FILE%'; $text = Get-Content -Raw $file; $updated = $text -replace '/M[TD]d?', '%DESIRED_FLAG%'; [System.IO.File]::WriteAllText($file, $updated, [System.Text.Encoding]::ASCII)" >NUL
+powershell -NoProfile -Command " = '%RUNTIME_FILE%';  = Get-Content -Raw ;  =  -replace '/M[TD]d?', '%DESIRED_FLAG%'; [System.IO.File]::WriteAllText(, , [System.Text.Encoding]::ASCII)" >NUL
 if %ERRORLEVEL% NEQ 0 (
   echo Failed to update runtime flag in %RUNTIME_FILE%.
   exit /b 1
