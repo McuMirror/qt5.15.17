@@ -12,7 +12,9 @@ OPENSSL_WORK="$OPENSSL_ROOT/work"
 OPENSSL_INCLUDE="$OPENSSL_ROOT/include"
 OPENSSL_LIB_RELEASE="$OPENSSL_ROOT/lib/release"
 OPENSSL_SYMBOL_HIDE_FLAGS="-Wl,--exclude-libs,libssl.a:libcrypto.a"
-COMMON_CFLAGS="-fPIC -fvisibility=hidden"
+COMMON_CFLAGS="-fPIC"
+export CFLAGS="$COMMON_CFLAGS"
+export CXXFLAGS="$COMMON_CFLAGS"
 
 mkdir -p "$QT_BUILD_TEMP" "$INSTALL_DIR"
 
@@ -57,7 +59,7 @@ build_variant() {
     configure_args+=("-d")
   fi
   configure_args+=("$target")
-  perl ./Configure "${configure_args[@]}" no-shared "CFLAGS=$COMMON_CFLAGS" "CXXFLAGS=$COMMON_CFLAGS"
+  perl ./Configure "${configure_args[@]}" no-shared
   make -j"$(cpu_count)" build_libs
   mkdir -p "$output"
   cp libssl.a libcrypto.a "$output/"
@@ -77,4 +79,3 @@ export PATH="$SCRIPT_DIR/qtbase/bin:$PATH"
 bash ./configure -prefix "$INSTALL_DIR" -confirm-license -opensource -release -force-debug-info -nomake examples -nomake tests -openssl-linked -platform linux-g++ -I "$OPENSSL_INCLUDE" -L "$OPENSSL_LIB_RELEASE"
 make -j"$(cpu_count)"
 make install
-popd >/dev/null

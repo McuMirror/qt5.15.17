@@ -12,7 +12,9 @@ OPENSSL_WORK="$OPENSSL_ROOT/work"
 OPENSSL_INCLUDE="$OPENSSL_ROOT/include"
 OPENSSL_LIB_DEBUG="$OPENSSL_ROOT/lib/debug"
 OPENSSL_SYMBOL_HIDE_FLAGS="-Wl,-dead_strip"
-COMMON_CFLAGS="-fPIC -fvisibility=hidden"
+COMMON_CFLAGS="-fPIC"
+export CFLAGS="$COMMON_CFLAGS"
+export CXXFLAGS="$COMMON_CFLAGS"
 
 mkdir -p "$QT_BUILD_TEMP" "$INSTALL_DIR"
 
@@ -50,7 +52,7 @@ build_variant() {
   local src="$variant_root/$OPENSSL_VERSION"
   stage_headers "$src"
   pushd "$src" >/dev/null
-  perl ./Configure -d "$target" no-shared "CFLAGS=$COMMON_CFLAGS" "CXXFLAGS=$COMMON_CFLAGS"
+  perl ./Configure -d "$target" no-shared
   make -j"$(cpu_count)" build_libs
   mkdir -p "$output"
   cp libssl.a libcrypto.a "$output/"
@@ -64,6 +66,7 @@ build_variant "$OPENSSL_LIB_DEBUG" darwin64-x86_64-cc
 export OPENSSL_INCDIR="$OPENSSL_INCLUDE"
 export OPENSSL_LIBDIR="$OPENSSL_LIB_DEBUG"
 export OPENSSL_LIBS="${OPENSSL_SYMBOL_HIDE_FLAGS} -L\"$OPENSSL_LIB_DEBUG\" -lssl -lcrypto"
+export OPENSSL_LIBS_RELEASE="$OPENSSL_LIBS"
 export OPENSSL_LIBS_DEBUG="$OPENSSL_LIBS"
 export PATH="$SCRIPT_DIR/qtbase/bin:$PATH"
 
