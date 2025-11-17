@@ -74,7 +74,6 @@ bash ./configure \
   -nomake tests \
   -openssl-linked \
   -no-icu \
-  -pcre=qt \
   -platform linux-g++ \
   -I "$OPENSSL_INCDIR" \
   -L "$OPENSSL_LIBDIR" \
