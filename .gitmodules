@@ -56,3 +56,11 @@
 	branch = 5.15
 	status = addon
 	repoType = replaced
+[submodule "qtwayland"]
+	depends = qtbase
+	path = qtwayland
+	url = https://github.com/qt/qtwayland.git
+	alias = qt/qtwayland
+	branch = 5.15
+	status = addon
+	repoType = replaced

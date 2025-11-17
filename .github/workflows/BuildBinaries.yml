@@ -1,4 +1,4 @@
-﻿name: Build Binaries
+name: Build Binaries
 
 on: workflow_dispatch
 
@@ -28,7 +28,7 @@ jobs:
           call C:\workspaces\qt5.15.17\onekey-build-windows-x86.bat
     - uses: actions/upload-artifact@v4
       with:
-        name: qt5.15.17_x86
+        name: qt5.15.17_windows_x86.zip
         path: C:\workspaces\qt5.15.17\Output\x86
 
   windows-x64:
@@ -56,7 +56,7 @@ jobs:
           call C:\workspaces\qt5.15.17\onekey-build-windows-x64.bat
     - uses: actions/upload-artifact@v4
       with:
-        name: qt5.15.17_x64
+        name: qt5.15.17_windows_x64.zip
         path: C:\workspaces\qt5.15.17\Output\x64
 
   windows-arm64:
@@ -84,7 +84,7 @@ jobs:
           call C:\workspaces\qt5.15.17\onekey-build-windows-arm64.bat
     - uses: actions/upload-artifact@v4
       with:
-        name: qt5.15.17_arm64
+        name: qt5.15.17_windows_arm64.zip
         path: C:\workspaces\qt5.15.17\Output\arm64
 
   windows-x86-debug:
@@ -112,7 +112,7 @@ jobs:
           call C:\workspaces\qt5.15.17\onekey-build-windows-x86-debug.bat
     - uses: actions/upload-artifact@v4
       with:
-        name: qt5.15.17_x86_debug
+        name: qt5.15.17_windows_x86_debug.zip
         path: C:\workspaces\qt5.15.17\Output\x86d
 
   windows-x64-debug:
@@ -140,7 +140,7 @@ jobs:
           call C:\workspaces\qt5.15.17\onekey-build-windows-x64-debug.bat
     - uses: actions/upload-artifact@v4
       with:
-        name: qt5.15.17_x64_debug
+        name: qt5.15.17_windows_x64_debug.zip
         path: C:\workspaces\qt5.15.17\Output\x64d
 
   windows-arm64-debug:
@@ -168,7 +168,7 @@ jobs:
           call C:\workspaces\qt5.15.17\onekey-build-windows-arm64-debug.bat
     - uses: actions/upload-artifact@v4
       with:
-        name: qt5.15.17_arm64_debug
+        name: qt5.15.17_windows_arm64_debug.zip
         path: C:\workspaces\qt5.15.17\Output\arm64d
 
   linux-x64:
@@ -183,10 +183,16 @@ jobs:
       run: |
         git config --global user.email "ci@github-actions.com"
         git config --global user.name "GitHub Actions"
-    - name: Install OpenGL dependencies
+    - name: Install XCB/Wayland dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev mesa-common-dev
+        sudo apt-get install -y \
+          libgl1-mesa-dev libglu1-mesa-dev mesa-common-dev \
+          libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev \
+          libxcb-image0-dev libxcb-icccm4-dev libxcb-keysyms1-dev libxcb-randr0-dev \
+          libxcb-sync-dev libxcb-xinerama0-dev libxcb-xkb-dev libxkbcommon-dev \
+          libxkbcommon-x11-dev xutils-dev \
+          libwayland-dev wayland-protocols wayland-scanner
     - name: Build qt5 linux x64
       run: bash ./onekey-build-linux-x64.sh
     - uses: actions/upload-artifact@v4
@@ -206,10 +212,16 @@ jobs:
       run: |
         git config --global user.email "ci@github-actions.com"
         git config --global user.name "GitHub Actions"
-    - name: Install OpenGL dependencies
+    - name: Install XCB/Wayland dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev mesa-common-dev
+        sudo apt-get install -y \
+          libgl1-mesa-dev libglu1-mesa-dev mesa-common-dev \
+          libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev \
+          libxcb-image0-dev libxcb-icccm4-dev libxcb-keysyms1-dev libxcb-randr0-dev \
+          libxcb-sync-dev libxcb-xinerama0-dev libxcb-xkb-dev libxkbcommon-dev \
+          libxkbcommon-x11-dev xutils-dev \
+          libwayland-dev wayland-protocols wayland-scanner
     - name: Build qt5 linux x64 debug
       run: bash ./onekey-build-linux-x64-debug.sh
     - uses: actions/upload-artifact@v4
@@ -229,10 +241,16 @@ jobs:
       run: |
         git config --global user.email "ci@github-actions.com"
         git config --global user.name "GitHub Actions"
-    - name: Install OpenGL dependencies
+    - name: Install XCB/Wayland dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev mesa-common-dev
+        sudo apt-get install -y \
+          libgl1-mesa-dev libglu1-mesa-dev mesa-common-dev \
+          libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev \
+          libxcb-image0-dev libxcb-icccm4-dev libxcb-keysyms1-dev libxcb-randr0-dev \
+          libxcb-sync-dev libxcb-xinerama0-dev libxcb-xkb-dev libxkbcommon-dev \
+          libxkbcommon-x11-dev xutils-dev \
+          libwayland-dev wayland-protocols wayland-scanner
     - name: Build qt5 linux arm64
       run: bash ./onekey-build-linux-arm64.sh
     - uses: actions/upload-artifact@v4
@@ -252,10 +270,16 @@ jobs:
       run: |
         git config --global user.email "ci@github-actions.com"
         git config --global user.name "GitHub Actions"
-    - name: Install OpenGL dependencies
+    - name: Install XCB/Wayland dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libgl1-mesa-dev libglu1-mesa-dev mesa-common-dev
+        sudo apt-get install -y \
+          libgl1-mesa-dev libglu1-mesa-dev mesa-common-dev \
+          libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev \
+          libxcb-image0-dev libxcb-icccm4-dev libxcb-keysyms1-dev libxcb-randr0-dev \
+          libxcb-sync-dev libxcb-xinerama0-dev libxcb-xkb-dev libxkbcommon-dev \
+          libxkbcommon-x11-dev xutils-dev \
+          libwayland-dev wayland-protocols wayland-scanner
     - name: Build qt5 linux arm64 debug
       run: bash ./onekey-build-linux-arm64-debug.sh
     - uses: actions/upload-artifact@v4
@@ -335,141 +359,141 @@ jobs:
     - name: Download x86 artifact
       uses: actions/download-artifact@v4
       with:
-        name: qt5.15.17_x86
+        name: qt5.15.17_windows_x86.zip
         path: ./release_work/x86
     - name: Zip x86 artifact
       run: |
         cd release_work/x86
-        zip -r ../../release_zips/qt5.15.17_x86.zip .
+        zip -r ../../release_zips/qt5.15.17_windows_x86.zip .
         cd ../../
         rm -rf release_work/x86
     - name: Upload x86 zip asset
       uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./release_zips/qt5.15.17_x86.zip
-        asset_name: qt5.15.17_x86.zip
+        asset_path: ./release_zips/qt5.15.17_windows_x86.zip
+        asset_name: qt5.15.17_windows_x86.zip
         asset_content_type: application/zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Cleanup x86 zip
       if: always()
-      run: rm -f ./release_zips/qt5.15.17_x86.zip
+      run: rm -f ./release_zips/qt5.15.17_windows_x86.zip
     - name: Download x64 artifact
       uses: actions/download-artifact@v4
       with:
-        name: qt5.15.17_x64
+        name: qt5.15.17_windows_x64.zip
         path: ./release_work/x64
     - name: Zip x64 artifact
       run: |
         cd release_work/x64
-        zip -r ../../release_zips/qt5.15.17_x64.zip .
+        zip -r ../../release_zips/qt5.15.17_windows_x64.zip .
         cd ../../
         rm -rf release_work/x64
     - name: Upload x64 zip asset
       uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./release_zips/qt5.15.17_x64.zip
-        asset_name: qt5.15.17_x64.zip
+        asset_path: ./release_zips/qt5.15.17_windows_x64.zip
+        asset_name: qt5.15.17_windows_x64.zip
         asset_content_type: application/zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Cleanup x64 zip
       if: always()
-      run: rm -f ./release_zips/qt5.15.17_x64.zip
+      run: rm -f ./release_zips/qt5.15.17_windows_x64.zip
     - name: Download arm64 artifact
       uses: actions/download-artifact@v4
       with:
-        name: qt5.15.17_arm64
+        name: qt5.15.17_windows_arm64.zip
         path: ./release_work/arm64
     - name: Zip arm64 artifact
       run: |
         cd release_work/arm64
-        zip -r ../../release_zips/qt5.15.17_arm64.zip .
+        zip -r ../../release_zips/qt5.15.17_windows_arm64.zip .
         cd ../../
         rm -rf release_work/arm64
     - name: Upload arm64 zip asset
       uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./release_zips/qt5.15.17_arm64.zip
-        asset_name: qt5.15.17_arm64.zip
+        asset_path: ./release_zips/qt5.15.17_windows_arm64.zip
+        asset_name: qt5.15.17_windows_arm64.zip
         asset_content_type: application/zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Cleanup arm64 zip
       if: always()
-      run: rm -f ./release_zips/qt5.15.17_arm64.zip
+      run: rm -f ./release_zips/qt5.15.17_windows_arm64.zip
     - name: Download x86 debug artifact
       uses: actions/download-artifact@v4
       with:
-        name: qt5.15.17_x86_debug
+        name: qt5.15.17_windows_x86_debug.zip
         path: ./release_work/x86-debug
     - name: Zip x86 debug artifact
       run: |
         cd release_work/x86-debug
-        zip -r ../../release_zips/qt5.15.17_x86_debug.zip .
+        zip -r ../../release_zips/qt5.15.17_windows_x86_debug.zip .
         cd ../../
         rm -rf release_work/x86-debug
     - name: Upload x86 debug zip asset
       uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./release_zips/qt5.15.17_x86_debug.zip
-        asset_name: qt5.15.17_x86_debug.zip
+        asset_path: ./release_zips/qt5.15.17_windows_x86_debug.zip
+        asset_name: qt5.15.17_windows_x86_debug.zip
         asset_content_type: application/zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Cleanup x86 debug zip
       if: always()
-      run: rm -f ./release_zips/qt5.15.17_x86_debug.zip
+      run: rm -f ./release_zips/qt5.15.17_windows_x86_debug.zip
     - name: Download x64 debug artifact
       uses: actions/download-artifact@v4
       with:
-        name: qt5.15.17_x64_debug
+        name: qt5.15.17_windows_x64_debug.zip
         path: ./release_work/x64-debug
     - name: Zip x64 debug artifact
       run: |
         cd release_work/x64-debug
-        zip -r ../../release_zips/qt5.15.17_x64_debug.zip .
+        zip -r ../../release_zips/qt5.15.17_windows_x64_debug.zip .
         cd ../../
         rm -rf release_work/x64-debug
     - name: Upload x64 debug zip asset
       uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./release_zips/qt5.15.17_x64_debug.zip
-        asset_name: qt5.15.17_x64_debug.zip
+        asset_path: ./release_zips/qt5.15.17_windows_x64_debug.zip
+        asset_name: qt5.15.17_windows_x64_debug.zip
         asset_content_type: application/zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Cleanup x64 debug zip
       if: always()
-      run: rm -f ./release_zips/qt5.15.17_x64_debug.zip
+      run: rm -f ./release_zips/qt5.15.17_windows_x64_debug.zip
     - name: Download arm64 debug artifact
       uses: actions/download-artifact@v4
       with:
-        name: qt5.15.17_arm64_debug
+        name: qt5.15.17_windows_arm64_debug.zip
         path: ./release_work/arm64-debug
     - name: Zip arm64 debug artifact
       run: |
         cd release_work/arm64-debug
-        zip -r ../../release_zips/qt5.15.17_arm64_debug.zip .
+        zip -r ../../release_zips/qt5.15.17_windows_arm64_debug.zip .
         cd ../../
         rm -rf release_work/arm64-debug
     - name: Upload arm64 debug zip asset
       uses: actions/upload-release-asset@v1
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./release_zips/qt5.15.17_arm64_debug.zip
-        asset_name: qt5.15.17_arm64_debug.zip
+        asset_path: ./release_zips/qt5.15.17_windows_arm64_debug.zip
+        asset_name: qt5.15.17_windows_arm64_debug.zip
         asset_content_type: application/zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Cleanup arm64 debug zip
       if: always()
-      run: rm -f ./release_zips/qt5.15.17_arm64_debug.zip
+      run: rm -f ./release_zips/qt5.15.17_windows_arm64_debug.zip
     - name: Download linux x64 artifact
       uses: actions/download-artifact@v4
       with:
