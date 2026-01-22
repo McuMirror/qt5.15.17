@@ -73,15 +73,15 @@ bash ./configure \
   -nomake examples \
   -nomake tests \
   -openssl-linked \
-  -zlib qt \
-  -libpng qt \
-  -pcre qt \
-  -doubleconversion qt \
-  -freetype qt \
-  -harfbuzz qt \
-  -libjpeg qt \
-  -libmd4c qt \
-  -sqlite qt \
+  -qt-zlib \
+  -qt-libpng \
+  -qt-pcre \
+  -qt-doubleconversion \
+  -qt-freetype \
+  -qt-harfbuzz \
+  -qt-libjpeg \
+  -qt-libmd4c \
+  -qt-sqlite \
   -no-zstd \
   -no-icu \
   -platform linux-g++ \
