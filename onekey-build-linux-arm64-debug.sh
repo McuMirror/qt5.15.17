@@ -73,6 +73,16 @@ bash ./configure \
   -nomake examples \
   -nomake tests \
   -openssl-linked \
+  -zlib qt \
+  -libpng qt \
+  -pcre qt \
+  -doubleconversion qt \
+  -freetype qt \
+  -harfbuzz qt \
+  -libjpeg qt \
+  -libmd4c qt \
+  -sqlite qt \
+  -no-zstd \
   -no-icu \
   -platform linux-g++ \
   -I "$OPENSSL_INCDIR" \
