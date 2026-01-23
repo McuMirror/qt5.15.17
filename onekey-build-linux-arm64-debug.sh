@@ -77,7 +77,7 @@ bash ./configure \
   -qt-libpng \
   -qt-pcre \
   -qt-doubleconversion \
-  -qt-freetype \
+  -system-freetype \
   -qt-harfbuzz \
   -qt-libjpeg \
   -qt-libmd4c \
